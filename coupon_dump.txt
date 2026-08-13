@@ -1,0 +1,55 @@
+<?php
+// Upload to: public_html/ez_dump_coupon_files.php (ROOT)
+// Run: https://elderzha.online/ez_dump_coupon_files.php?key=EZ_FIX_2026
+if (($_GET['key'] ?? '') !== 'EZ_FIX_2026') { die('403'); }
+
+$base = '/home/u544219516/domains/elderzha.online/public_html/elderzhacopy';
+
+$files = [
+    'Coupon Model'        => "$base/app/Models/Coupon.php",
+    'CouponHistory Model' => "$base/app/Models/CouponHistory.php",
+];
+
+echo '<pre style="white-space:pre-wrap;font-family:monospace;font-size:12px;padding:16px;background:#f5f5f5">';
+
+foreach ($files as $label => $path) {
+    echo "===================================================\n";
+    echo "== $label ($path)\n";
+    echo "===================================================\n";
+    if (file_exists($path)) {
+        echo htmlspecialchars(file_get_contents($path));
+    } else {
+        echo "FILE NOT FOUND\n";
+    }
+    echo "\n\n";
+}
+
+// Also find admin controller(s) that mention 'coupon' — to locate
+// where admin actually creates/manages codes
+echo "===================================================\n";
+echo "== Searching app/Http/Controllers for coupon-related files\n";
+echo "===================================================\n";
+$dirs = [
+    "$base/app/Http/Controllers",
+    "$base/app/Http/Controllers/Admin",
+];
+foreach ($dirs as $dir) {
+    if (!is_dir($dir)) continue;
+    foreach (glob("$dir/*.php") as $f) {
+        if (stripos(basename($f), 'coupon') !== false) {
+            echo basename($f) . " -> $f\n";
+        }
+    }
+}
+
+// Also search routes/web.php for coupon admin routes
+$webRoutes = file_get_contents("$base/routes/web.php");
+echo "\n== Coupon-related admin routes ==\n";
+foreach (explode("\n", $webRoutes) as $line) {
+    if (stripos($line, 'coupon') !== false) {
+        echo htmlspecialchars(trim($line)) . "\n";
+    }
+}
+
+echo '</pre>';
+echo '<p><strong>Delete this file after use!</strong></p>';
